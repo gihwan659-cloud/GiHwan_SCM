@@ -122,20 +122,20 @@ app.post("/api/gemini/validate", async (req, res) => {
       apiKey: customKey,
       httpOptions: {
         headers: {
-          "User-Agent": "aistudio-build-validation",
+          "User-Agent": "aistudio-build",
         },
       },
     });
 
     const response = await testAi.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: "API Key validation test. Respond only with the word 'OK'.",
+      model: "gemini-3.5-flash",
+      contents: "API Key validation test. Respond with 'OK'.",
     });
 
-    if (response.text && response.text.trim().toLowerCase().includes("ok")) {
+    if (response && response.text) {
       return res.json({ valid: true });
     } else {
-      return res.json({ valid: true, note: "API가 응답했으나 응답값이 예상과 다릅니다." });
+      return res.json({ valid: true, note: "API가 응답했으나 응답값이 비어있습니다." });
     }
   } catch (error: any) {
     console.error("Gemini validation error:", error);
