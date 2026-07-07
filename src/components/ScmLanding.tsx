@@ -211,7 +211,7 @@ export default function ScmLanding({
             <div className="absolute -inset-1.5 bg-gradient-to-r from-orange-500 via-amber-500 to-blue-500 rounded-3xl blur opacity-30 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
             <div className="relative bg-[#0b0f19] border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
               <img
-                src="/src/assets/images/factory_robot_1783404690885.jpg"
+                src="/factory_robot_1783404690885.jpg"
                 alt="SCM Smart Factory Robotic Automation"
                 className="w-full h-[320px] md:h-[450px] object-cover hover:scale-105 transition-transform duration-700"
                 referrerPolicy="no-referrer"
