@@ -1,0 +1,134 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+/* Base resets & report formatting styled to match Bento Grid Theme with extremely high readability */
+.report-markdown-body {
+  font-family: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+}
+
+.report-markdown-body h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-top: 1.8rem;
+  margin-bottom: 0.9rem;
+  border-left: 4px solid #f97316; /* Bright Orange Accent */
+  padding-left: 0.85rem;
+  letter-spacing: -0.02em;
+}
+
+.report-markdown-body h4 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #f8fafc;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  letter-spacing: -0.01em;
+}
+
+/* Color differentiate the Scenario Titles inside Markdown - High contrast colors */
+.report-markdown-body h4:nth-of-type(odd) {
+  color: #38bdf8; /* Bright Blue for Scenario A */
+}
+
+.report-markdown-body h4:nth-of-type(even) {
+  color: #c084fc; /* Bright Purple for Scenario B */
+}
+
+.report-markdown-body p {
+  margin-bottom: 0.85rem;
+  color: #e2e8f0; /* Clear slate-200 for excellent contrast */
+  line-height: 1.7;
+  font-size: 0.925rem;
+}
+
+.report-markdown-body ul {
+  list-style-type: disc;
+  margin-left: 1.5rem;
+  margin-bottom: 1.2rem;
+  color: #e2e8f0; /* Clear slate-200 */
+  font-size: 0.925rem;
+}
+
+.report-markdown-body li {
+  margin-bottom: 0.45rem;
+  line-height: 1.6;
+}
+
+.report-markdown-body strong {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+/* Custom Styled SCM Tables with Premium Dark Bento Aesthetics & Ultra-high contrast */
+.report-markdown-body table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 1.5rem 0;
+  font-size: 0.85rem;
+  background-color: #111827; /* Rich dark background */
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #374151; /* Lighter border for high visibility */
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.report-markdown-body th {
+  background-color: #1f2937; /* Higher contrast header */
+  color: #f3f4f6;
+  font-weight: 600;
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 2px solid #374151;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+.report-markdown-body th:nth-child(2) {
+  color: #38bdf8; /* Scenario A header color */
+}
+
+.report-markdown-body th:nth-child(3) {
+  color: #c084fc; /* Scenario B header color */
+}
+
+.report-markdown-body td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #1f2937;
+  color: #f1f5f9; /* Near white for maximum legibility */
+  vertical-align: top;
+  line-height: 1.6;
+}
+
+.report-markdown-body tr:last-child td {
+  border-bottom: none;
+}
+
+.report-markdown-body tr:hover {
+  background-color: rgba(55, 65, 81, 0.4);
+}
+
+/* Custom scrollbars for Bento Panels */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0A0C10;
+}
+::-webkit-scrollbar-thumb {
+  background: #27272a;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3f3f46;
+}

@@ -1,0 +1,6 @@
+{
+  "name": "협력사 납기 지연 대응 지원 AI 전문가 시스템",
+  "description": "SCM 및 생산 관리 분야의 전문가로서, 자재 수급 지연 시 생산 라인 중단(Line Stop) 방지를 위한 최적화 비상 대응 시나리오를 설계하고 공정 조정을 조력하는 AI 전문가 시스템",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
