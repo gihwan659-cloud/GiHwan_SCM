@@ -45,30 +45,86 @@ export default function ScmLanding({
 
   const handleValidateAndSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputKey.trim()) return;
+    const cleanKey = inputKey.trim();
+    if (!cleanKey) return;
     
     setIsValidating(true);
     setValidationStatus('idle');
     setValidationError('');
     
+    let backendSuccess = false;
+    
     try {
       const res = await fetch("/api/gemini/validate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ apiKey: inputKey.trim() })
+        body: JSON.stringify({ apiKey: cleanKey })
       });
       
       const data = await res.json();
       if (res.ok && data.valid) {
         setValidationStatus('success');
-        onUpdateApiKey(inputKey.trim());
+        onUpdateApiKey(cleanKey);
+        backendSuccess = true;
       } else {
-        setValidationStatus('error');
-        setValidationError(data.error || "올바르지 않은 API Key입니다.");
+        // If the backend specifically rejected the key with a 400 error (not 404/not-found)
+        if (res.status === 400) {
+          setValidationStatus('error');
+          setValidationError(data.error || "올바르지 않은 API Key입니다.");
+          setIsValidating(false);
+          return;
+        }
       }
     } catch (err: any) {
+      console.warn("Backend validation failed or not available, trying browser-direct validation fallback...", err);
+    }
+
+    if (backendSuccess) {
+      setIsValidating(false);
+      return;
+    }
+
+    // Direct Browser-to-Google-API Validation Fallback (Useful for static hosts like Vercel)
+    try {
+      const models = ["gemini-2.5-flash", "gemini-3.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
+      let browserSuccess = false;
+      let lastErrorMsg = "";
+
+      for (const model of models) {
+        try {
+          const googleRes = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${cleanKey}`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                contents: [{ parts: [{ text: "Hello, respond with 'OK'" }] }]
+              })
+            }
+          );
+          
+          if (googleRes.ok) {
+            browserSuccess = true;
+            break;
+          } else {
+            const googleData = await googleRes.json().catch(() => ({}));
+            lastErrorMsg = googleData.error?.message || `HTTP ${googleRes.status}`;
+          }
+        } catch (mErr: any) {
+          lastErrorMsg = mErr?.message || String(mErr);
+        }
+      }
+
+      if (browserSuccess) {
+        setValidationStatus('success');
+        onUpdateApiKey(cleanKey);
+      } else {
+        setValidationStatus('error');
+        setValidationError(lastErrorMsg || "유효하지 않은 API 키이거나 해당 모델 권한이 없습니다.");
+      }
+    } catch (fallbackErr: any) {
       setValidationStatus('error');
-      setValidationError(err.message || "연결 오류가 발생했습니다.");
+      setValidationError("올바르지 않은 API Key이거나 네트워크 연결에 실패했습니다.");
     } finally {
       setIsValidating(false);
     }

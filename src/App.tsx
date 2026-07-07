@@ -30,6 +30,7 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 import { marked } from "marked";
 import ScmLanding from "./components/ScmLanding";
+import { fallbackGeminiAnalyze, fallbackGeminiChat } from "./lib/geminiFallback";
 
 // Define Interfaces
 interface Message {
@@ -209,26 +210,39 @@ export default function App() {
       };
       setChatHistory(prev => [...prev, statusMsg]);
 
-      const reqHeaders: Record<string, string> = { "Content-Type": "application/json" };
-      if (geminiApiKey) {
-        reqHeaders["x-gemini-api-key"] = geminiApiKey;
+      let reportText = "";
+
+      try {
+        const reqHeaders: Record<string, string> = { "Content-Type": "application/json" };
+        if (geminiApiKey) {
+          reqHeaders["x-gemini-api-key"] = geminiApiKey;
+        }
+
+        const response = await fetch("/api/gemini/analyze", {
+          method: "POST",
+          headers: reqHeaders,
+          body: JSON.stringify({
+            part: selectedPart || customPart,
+            situation: situationName
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP Error ${response.status}`);
+        }
+
+        const data = await response.json();
+        reportText = data.report;
+      } catch (backendError: any) {
+        console.warn("Backend analyze failed, trying direct browser fallback...", backendError);
+        if (geminiApiKey) {
+          reportText = await fallbackGeminiAnalyze(selectedPart || customPart, situationName, geminiApiKey);
+        } else {
+          throw new Error("서버와의 연결에 실패했습니다. Gemini API Key를 정상적으로 등록하셨는지 확인해 주십시오.");
+        }
       }
 
-      const response = await fetch("/api/gemini/analyze", {
-        method: "POST",
-        headers: reqHeaders,
-        body: JSON.stringify({
-          part: selectedPart || customPart,
-          situation: situationName
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error("서버 분석 에러가 발생했습니다.");
-      }
-
-      const data = await response.json();
-      setGeneratedReport(data.report);
+      setGeneratedReport(reportText);
 
       // Successfully generated
       const completeMsg: Message = {
@@ -291,33 +305,52 @@ export default function App() {
           content: m.content
         }));
 
-      const reqHeaders: Record<string, string> = { "Content-Type": "application/json" };
-      if (geminiApiKey) {
-        reqHeaders["x-gemini-api-key"] = geminiApiKey;
+      let replyText = "";
+
+      try {
+        const reqHeaders: Record<string, string> = { "Content-Type": "application/json" };
+        if (geminiApiKey) {
+          reqHeaders["x-gemini-api-key"] = geminiApiKey;
+        }
+
+        const response = await fetch("/api/gemini/chat", {
+          method: "POST",
+          headers: reqHeaders,
+          body: JSON.stringify({
+            history: chatContextHistory,
+            message: userText,
+            part: selectedPart || customPart,
+            situation: selectedSituation || customSituation,
+            report: generatedReport
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP Error ${response.status}`);
+        }
+
+        const data = await response.json();
+        replyText = data.reply;
+      } catch (backendError: any) {
+        console.warn("Backend chat failed, trying direct browser fallback...", backendError);
+        if (geminiApiKey) {
+          replyText = await fallbackGeminiChat(
+            chatContextHistory,
+            userText,
+            selectedPart || customPart,
+            selectedSituation || customSituation,
+            generatedReport,
+            geminiApiKey
+          );
+        } else {
+          throw new Error("서버 연결에 실패하였으며 개인 API Key가 등록되어 있지 않습니다.");
+        }
       }
-
-      const response = await fetch("/api/gemini/chat", {
-        method: "POST",
-        headers: reqHeaders,
-        body: JSON.stringify({
-          history: chatContextHistory,
-          message: userText,
-          part: selectedPart || customPart,
-          situation: selectedSituation || customSituation,
-          report: generatedReport
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error("채팅 서버 응답 에러");
-      }
-
-      const data = await response.json();
       
       const aiReply: Message = {
         id: `chat-ai-${Date.now()}`,
         role: "model",
-        content: data.reply,
+        content: replyText,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
       setChatHistory(prev => [...prev, aiReply]);
