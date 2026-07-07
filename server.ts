@@ -14,7 +14,7 @@ app.use(express.json());
 
 // Initialize Gemini SDK helper function
 function getGoogleGenAI(reqCustomApiKey?: string): GoogleGenAI {
-  const apiKey = reqCustomApiKey || process.env.GEMINI_API_KEY;
+  const apiKey = reqCustomApiKey?.trim() || process.env.GEMINI_API_KEY;
   if (!apiKey) {
     throw new Error("GEMINI_API_KEY가 존재하지 않습니다.");
   }
@@ -30,7 +30,7 @@ function getGoogleGenAI(reqCustomApiKey?: string): GoogleGenAI {
 
 // 1. API Endpoint for generating the Contingency Plan Report
 app.post("/api/gemini/analyze", async (req, res) => {
-  const customKey = req.headers["x-gemini-api-key"] as string | undefined;
+  const customKey = (req.headers["x-gemini-api-key"] as string | undefined)?.trim();
   
   let currentAi: GoogleGenAI;
   try {
@@ -112,35 +112,50 @@ app.post("/api/gemini/analyze", async (req, res) => {
 
 // 1.5. API Endpoint to validate a custom Gemini API Key
 app.post("/api/gemini/validate", async (req, res) => {
-  const customKey = req.body.apiKey;
+  const customKey = req.body.apiKey?.trim();
   if (!customKey) {
     return res.status(400).json({ error: "API Key가 전달되지 않았습니다." });
   }
 
-  try {
-    const testAi = new GoogleGenAI({
-      apiKey: customKey,
-      httpOptions: {
-        headers: {
-          "User-Agent": "aistudio-build",
-        },
+  const testAi = new GoogleGenAI({
+    apiKey: customKey,
+    httpOptions: {
+      headers: {
+        "User-Agent": "aistudio-build",
       },
-    });
+    },
+  });
 
-    const response = await testAi.models.generateContent({
-      model: "gemini-3.5-flash",
-      contents: "API Key validation test. Respond with 'OK'.",
-    });
+  // Try different models to accommodate different types of keys (free, billing, preview limits)
+  const modelsToTry = [
+    "gemini-2.5-flash",
+    "gemini-3.5-flash",
+    "gemini-2.0-flash",
+    "gemini-1.5-flash"
+  ];
 
-    if (response && response.text) {
-      return res.json({ valid: true });
-    } else {
-      return res.json({ valid: true, note: "API가 응답했으나 응답값이 비어있습니다." });
+  let lastError: any = null;
+
+  for (const modelName of modelsToTry) {
+    try {
+      const response = await testAi.models.generateContent({
+        model: modelName,
+        contents: "Hello. Respond with 'OK'.",
+      });
+      if (response && response.text) {
+        return res.json({ valid: true, modelUsed: modelName });
+      }
+    } catch (err: any) {
+      console.warn(`Validation failed for model ${modelName}:`, err?.message || err);
+      lastError = err;
     }
-  } catch (error: any) {
-    console.error("Gemini validation error:", error);
-    return res.status(400).json({ valid: false, error: error.message || "유효하지 않은 API 키이거나 통신 장애가 발생했습니다." });
   }
+
+  console.error("Gemini validation final error:", lastError);
+  return res.status(400).json({ 
+    valid: false, 
+    error: lastError?.message || "유효하지 않은 API 키이거나 해당 모델 권한이 없습니다." 
+  });
 });
 
 // 2. Chat Q&A API Endpoint for follow-up questions
